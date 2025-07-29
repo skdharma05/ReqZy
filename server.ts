@@ -2,11 +2,13 @@ import express from "express";
 import mongoose from "mongoose";
 import router from "./controller/index";
 import { ensureSuperUserExists } from "./utils/bootstrap";
+import cors from "cors";
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
 app.use(router);
 

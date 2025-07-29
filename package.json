@@ -2,8 +2,17 @@
   "name": "pr_app",
   "type": "module",
   "private": true,
+  "workspaces": ["frontend"],
+  "packageManager": "bun@1.0.0",
   "scripts": {
-    "dev": "bun --watch server.ts"
+    "dev": "bun --watch server.ts",
+    "frontend:install": "cd frontend && bun install",
+    "frontend:start": "cd frontend && bun run start",
+    "frontend:build": "cd frontend && bun run build",
+    "install:all": "bun install && bun run frontend:install",
+    "seed:presentation": "bun run scripts/seed_presentation_data.ts",
+    "seed:roles": "bun run scripts/seed_roles.ts",
+    "reset:data": "bun run scripts/reset_data.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -15,6 +24,7 @@
   "dependencies": {
     "@types/express": "^5.0.3",
     "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.5"
