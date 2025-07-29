@@ -1,0 +1,350 @@
+<div class="user-management">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">User Management</h1>
+        <p class="page-subtitle">Manage system users, roles, and permissions</p>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="btn btn-primary"
+          (click)="openCreateModal()">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Add New User
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="filters-section">
+    <div class="filters-content">
+      <!-- Search -->
+      <div class="search-group">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input 
+            type="text" 
+            class="search-input"
+            placeholder="Search users by email, role, or department..."
+            (input)="onSearch($event)"
+            [value]="searchTerm()">
+        </div>
+      </div>
+
+      <!-- Department Filter -->
+      <div class="filter-group">
+        <select 
+          class="filter-select"
+          (change)="onDepartmentFilterChange($event)"
+          [value]="selectedDepartmentFilter()">
+          <option value="">All Departments</option>
+          @for (department of departments(); track department.id) {
+            <option [value]="department.id">{{ department.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Users Table -->
+  <div class="table-container">
+    <div class="table-header">
+      <h2 class="table-title">Users ({{ totalUsers() }})</h2>
+      <div class="table-info">
+        @if (paginationInfo().total > 0) {
+          <span class="pagination-text">
+            Showing {{ paginationInfo().start }} - {{ paginationInfo().end }} of {{ paginationInfo().total }} users
+          </span>
+        }
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <!-- Loading State -->
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading users...</p>
+      </div>
+    } @else if (filteredUsers().length === 0) {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <h3 class="empty-title">No Users Found</h3>
+        <p class="empty-description">
+          @if (searchTerm() || selectedDepartmentFilter()) {
+            No users match your current filters. Try adjusting your search criteria.
+          } @else {
+            Get started by adding your first user to the system.
+          }
+        </p>
+        @if (!searchTerm() && !selectedDepartmentFilter()) {
+          <button class="btn btn-primary" (click)="openCreateModal()">
+            Add First User
+          </button>
+        }
+      </div>
+    } @else {
+      <!-- Users Table -->
+      <div class="table-wrapper">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers(); track user.id) {
+              <tr class="user-row">
+                <td class="user-cell">
+                  <div class="user-info">
+                    <div class="user-avatar">
+                      {{ (user.email.charAt(0) || 'U').toUpperCase() }}
+                    </div>
+                    <div class="user-details">
+                      <div class="user-email">{{ user.email }}</div>
+                      <div class="user-meta">
+                        ID: {{ user.id }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="role-cell">
+                  <span class="role-badge">{{ getRoleName(user.roleId) }}</span>
+                </td>
+                <td class="department-cell">
+                  <span class="department-name">{{ getDepartmentName(user.departmentId) }}</span>
+                </td>
+                <td class="status-cell">
+                  <div class="status-badges">
+                    @if (user.isSuperUser) {
+                      <span class="badge badge-super">Super User</span>
+                    }
+                    <span class="badge badge-active">Active</span>
+                  </div>
+                </td>
+                <td class="actions-cell">
+                  <div class="action-buttons">
+                    <button 
+                      class="action-btn edit"
+                      (click)="openEditModal(user)"
+                      title="Edit User">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+                    <button 
+                      class="action-btn reset"
+                      (click)="resetPassword(user)"
+                      title="Reset Password">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                      </svg>
+                    </button>
+                    <button 
+                      class="action-btn delete"
+                      (click)="deleteUser(user)"
+                      title="Delete User">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (paginationInfo().pages > 1) {
+        <div class="pagination">
+          <button 
+            class="pagination-btn"
+            [disabled]="currentPage() === 1"
+            (click)="changePage(currentPage() - 1)">
+            Previous
+          </button>
+          
+          @for (page of [].constructor(paginationInfo().pages); track $index) {
+            <button 
+              class="pagination-btn"
+              [class.active]="currentPage() === $index + 1"
+              (click)="changePage($index + 1)">
+              {{ $index + 1 }}
+            </button>
+          }
+          
+          <button 
+            class="pagination-btn"
+            [disabled]="currentPage() === paginationInfo().pages"
+            (click)="changePage(currentPage() + 1)">
+            Next
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- User Form Modal -->
+@if (isModalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          {{ isEditMode() ? 'Edit User' : 'Create New User' }}
+        </h2>
+        <button class="modal-close" (click)="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="modal-form">
+        <div class="modal-body">
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input 
+              type="email" 
+              id="email"
+              formControlName="email"
+              class="form-input"
+              [class.error]="isFieldInvalid('email')"
+              placeholder="Enter user email">
+            @if (isFieldInvalid('email')) {
+              <div class="form-error">{{ getFieldError('email') }}</div>
+            }
+          </div>
+
+          <!-- Password (only for create) -->
+          @if (!isEditMode()) {
+            <div class="form-group">
+              <label for="password" class="form-label">Password</label>
+              <input 
+                type="password" 
+                id="password"
+                formControlName="password"
+                class="form-input"
+                [class.error]="isFieldInvalid('password')"
+                placeholder="Enter password">
+              @if (isFieldInvalid('password')) {
+                <div class="form-error">{{ getFieldError('password') }}</div>
+              }
+            </div>
+          }
+
+          <!-- Role -->
+          <div class="form-group">
+            <label for="roleId" class="form-label">Role</label>
+            <select 
+              id="roleId"
+              formControlName="roleId"
+              class="form-select"
+              [class.error]="isFieldInvalid('roleId')">
+              <option value="">Select a role</option>
+              @for (role of roles(); track role.id) {
+                <option [value]="role.id">{{ role.name }}</option>
+              }
+            </select>
+            @if (isFieldInvalid('roleId')) {
+              <div class="form-error">{{ getFieldError('roleId') }}</div>
+            }
+          </div>
+
+          <!-- Department -->
+          <div class="form-group">
+            <label for="departmentId" class="form-label">Department</label>
+            <select 
+              id="departmentId"
+              formControlName="departmentId"
+              class="form-select"
+              [class.error]="isFieldInvalid('departmentId')">
+              <option value="">Select a department</option>
+              @for (department of departments(); track department.id) {
+                <option [value]="department.id">{{ department.name }}</option>
+              }
+            </select>
+            @if (isFieldInvalid('departmentId')) {
+              <div class="form-error">{{ getFieldError('departmentId') }}</div>
+            }
+          </div>
+
+          <!-- Super User -->
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox"
+                formControlName="isSuperUser"
+                class="checkbox-input">
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">Super User (Administrative privileges)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeModal()"
+            [disabled]="isSubmitting()">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="!userForm.valid || isSubmitting()">
+            @if (isSubmitting()) {
+              <div class="btn-spinner"></div>
+              {{ isEditMode() ? 'Updating...' : 'Creating...' }}
+            } @else {
+              {{ isEditMode() ? 'Update User' : 'Create User' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

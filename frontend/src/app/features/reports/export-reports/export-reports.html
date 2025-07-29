@@ -1,0 +1,242 @@
+<div class="export-reports">
+  <div class="page-header">
+    <h1>Export Reports</h1>
+    <div class="header-info">
+      <span class="info-text">Generate and download detailed reports</span>
+    </div>
+  </div>
+
+  <div class="export-wizard">
+    <!-- Step 1: Template Selection -->
+    <div class="wizard-section">
+      <h2>
+        <span class="step-number">1</span>
+        Select Report Template
+      </h2>
+      
+      <div class="templates-grid">
+        @for (template of exportTemplates; track template.id) {
+          <div 
+            class="template-card"
+            [class.selected]="selectedTemplate() === template.id"
+            (click)="selectTemplate(template.id)">
+            <div class="template-icon">
+              <i [class]="template.icon"></i>
+            </div>
+            <div class="template-content">
+              <h3>{{ template.name }}</h3>
+              <p>{{ template.description }}</p>
+              <div class="template-format">
+                <span class="format-badge" [attr.data-format]="template.format">
+                  {{ template.format.toUpperCase() }}
+                </span>
+              </div>
+            </div>
+            <div class="template-selection">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Step 2: Filters -->
+    @if (selectedTemplate()) {
+      <div class="wizard-section">
+        <h2>
+          <span class="step-number">2</span>
+          Configure Filters
+        </h2>
+        
+        <div class="filters-form">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>Date Range</label>
+              <div class="date-range">
+                <input 
+                  type="date"
+                  [value]="filters().dateFrom"
+                  (input)="updateFilter('dateFrom', $event.target.value)"
+                  class="form-control">
+                <span class="date-separator">to</span>
+                <input 
+                  type="date"
+                  [value]="filters().dateTo"
+                  (input)="updateFilter('dateTo', $event.target.value)"
+                  class="form-control">
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <label>Status</label>
+              <select 
+                [value]="filters().status"
+                (change)="onStatusChange($event)"
+                class="form-control">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>Department</label>
+              <select 
+                [value]="filters().department"
+                (change)="onDepartmentFilterChange($event)"
+                class="form-control">
+                <option value="">All Departments</option>
+                <option value="IT">IT Department</option>
+                <option value="HR">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+                <option value="Marketing">Marketing</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label>Category</label>
+              <select 
+                [value]="filters().category"
+                (change)="onCategoryFilterChange($event)"
+                class="form-control">
+                <option value="">All Categories</option>
+                <option value="office-supplies">Office Supplies</option>
+                <option value="technology">Technology</option>
+                <option value="furniture">Furniture</option>
+                <option value="equipment">Equipment</option>
+                <option value="services">Services</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>Amount Range</label>
+              <div class="amount-range">
+                <div class="amount-input">
+                  <span class="currency-symbol">$</span>
+                  <input 
+                    type="number"
+                    placeholder="Min amount"
+                    [value]="filters().amountMin || ''"
+                    (input)="onAmountMinChange($event)"
+                    class="form-control">
+                </div>
+                <span class="amount-separator">to</span>
+                <div class="amount-input">
+                  <span class="currency-symbol">$</span>
+                  <input 
+                    type="number"
+                    placeholder="Max amount"
+                    [value]="filters().amountMax || ''"
+                    (input)="onAmountMaxChange($event)"
+                    class="form-control">
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button 
+                class="btn btn-outline-secondary"
+                (click)="clearFilters()">
+                <i class="fas fa-eraser"></i>
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Export -->
+      <div class="wizard-section">
+        <h2>
+          <span class="step-number">3</span>
+          Generate Report
+        </h2>
+        
+        <div class="export-section">
+          <div class="selected-template-info">
+            <div class="template-summary">
+              <i [class]="getSelectedTemplate()?.icon"></i>
+              <div class="summary-content">
+                <h3>{{ getSelectedTemplate()?.name }}</h3>
+                <p>{{ getSelectedTemplate()?.description }}</p>
+              </div>
+              <div class="format-info">
+                <span class="format-badge" [attr.data-format]="exportFormat()">
+                  {{ exportFormat().toUpperCase() }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          @if (isExporting()) {
+            <div class="export-progress">
+              <div class="progress-info">
+                <span>Generating report...</span>
+                <span class="progress-percentage">{{ exportProgress() }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill"
+                  [style.width.%]="exportProgress()">
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="export-actions">
+              <button 
+                class="btn btn-primary btn-large"
+                (click)="exportReport()">
+                <i class="fas fa-download"></i>
+                Generate & Download Report
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Recent Exports -->
+  @if (recentExports().length > 0) {
+    <div class="recent-exports">
+      <h2>Recent Exports</h2>
+      
+      <div class="exports-list">
+        @for (exportItem of recentExports(); track exportItem.id) {
+          <div class="export-item">
+            <div class="export-icon">
+              <i class="fas fa-file-download"></i>
+            </div>
+            <div class="export-details">
+              <h4>{{ exportItem.name }}</h4>
+              <div class="export-meta">
+                <span class="format">{{ exportItem.format }}</span>
+                <span class="size">{{ formatFileSize(exportItem.size) }}</span>
+                <span class="date">{{ formatDate(exportItem.exportedAt) }}</span>
+              </div>
+            </div>
+            <div class="export-actions">
+              <button 
+                class="btn btn-outline-primary btn-sm"
+                (click)="downloadRecentExport(exportItem)">
+                <i class="fas fa-download"></i>
+                Download
+              </button>
+              <button 
+                class="btn btn-outline-danger btn-sm"
+                (click)="deleteRecentExport(exportItem.id)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

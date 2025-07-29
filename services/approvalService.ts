@@ -77,7 +77,8 @@ export class ApprovalService {
     const prData = pr.toObject();
 
     // Convert stored rules into a format RuleEngine can evaluate
-    const parsedRules = (workflow.rules as IWorkflowRule[]).map((rule) => {
+    const rules = workflow.rules as unknown as IWorkflowRule[];
+    const parsedRules = rules.map((rule) => {
       const parsedCondition = JSON.parse(rule.condition);
       return {
         conditions: Array.isArray(parsedCondition)
@@ -158,6 +159,54 @@ export class ApprovalService {
    */
   static async getApprovals(prId: string): Promise<IApproval[]> {
     return ApprovalModel.find({ prId }).exec();
+  }
+
+  /**
+   * Get all pending approvals for a specific user
+   */
+  static async getPendingApprovals(userId: string): Promise<IApproval[]> {
+    return ApprovalModel.find({ 
+      approverId: userId, 
+      status: "pending" 
+    })
+    .populate('prId')
+    .exec();
+  }
+
+  /**
+   * Batch approve multiple PRs
+   */
+  static async batchApprove(
+    prIds: string[], 
+    approverId: string, 
+    comments?: string
+  ): Promise<IApproval[]> {
+    const results: IApproval[] = [];
+    
+    for (const prId of prIds) {
+      try {
+        const approval = await this.recordApproval(prId, approverId, "approved", comments);
+        results.push(approval);
+      } catch (error) {
+        console.error(`Failed to approve PR ${prId}:`, error);
+        // Continue with other PRs even if one fails
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * Get approval history for a specific user
+   */
+  static async getApprovalHistory(userId: string): Promise<IApproval[]> {
+    return ApprovalModel.find({ 
+      approverId: userId, 
+      status: { $in: ["approved", "rejected"] }
+    })
+    .populate('prId')
+    .sort({ approvedAt: -1 })
+    .exec();
   }
 }
 

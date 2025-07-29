@@ -1,0 +1,238 @@
+// Category management styles - simplified standalone version
+.category-management {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    h1 {
+      margin: 0;
+      color: #1a1a1a;
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+
+      .btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+    }
+  }
+
+  .search-section {
+    background: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+
+    .search-box {
+      position: relative;
+
+      .form-control {
+        height: 48px;
+        padding-left: 40px;
+        font-size: 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        transition: border-color 0.2s;
+
+        &:focus {
+          border-color: #4285f4;
+          box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+        }
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+      }
+    }
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .category-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .category-name {
+        margin: 0 0 8px;
+        color: #1a1a1a;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .category-description {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0;
+      }
+    }
+
+    .approval-rules {
+      background: #f8fbff;
+      border: 1px solid #e3f2fd;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 24px;
+
+      .rules-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        color: #1565c0;
+        font-weight: 600;
+        font-size: 14px;
+
+        .rules-icon {
+          font-size: 16px;
+        }
+      }
+
+      .rules-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 4px 0;
+          font-size: 13px;
+          color: #424242;
+
+          &:before {
+            content: '•';
+            color: #1565c0;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+    .category-actions {
+      padding: 16px 24px 20px;
+      display: flex;
+      gap: 8px;
+
+      .btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+    }
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 64px 24px;
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4285f4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    p {
+      color: #666;
+      font-size: 16px;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 64px 24px;
+
+    .empty-icon {
+      font-size: 64px;
+      color: #ddd;
+      margin-bottom: 24px;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      color: #333;
+      font-size: 1.5rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 16px;
+      margin: 0;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .category-management {
+    padding: 16px;
+
+    .categories-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .page-header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+
+      .header-actions {
+        justify-content: center;
+      }
+    }
+  }
+}

@@ -19,6 +19,15 @@ export interface CreatePRData {
 
 export class PRService {
   /**
+   * Fetch all PRs with optional filtering
+   */
+  static async getAll(filters: Record<string, any> = {}): Promise<IPurchaseRequisition[]> {
+    return PurchaseRequisitionModel.find(filters)
+      .populate("createdBy", "email roleId departmentId")
+      .exec();
+  }
+
+  /**
    * Fetch a single PR by its ID
    */
   static async getById(prId: string): Promise<IPurchaseRequisition> {

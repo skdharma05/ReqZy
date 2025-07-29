@@ -1,0 +1,363 @@
+<div class="department-management">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Department Management</h1>
+      <p class="header-subtitle">Manage organizational departments and their configurations</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="fas fa-plus"></i>
+      Add Department
+    </button>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon primary">
+        <i class="fas fa-building"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ getActiveDepartmentsCount() }}</div>
+        <div class="stat-label">Active Departments</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon success">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ getTotalEmployees() }}</div>
+        <div class="stat-label">Total Employees</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon info">
+        <i class="fas fa-dollar-sign"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ formatCurrency(getTotalBudget()) }}</div>
+        <div class="stat-label">Total Budget</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="controls-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search departments..." 
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+        class="form-control">
+      <i class="fas fa-search"></i>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading departments...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (filteredDepartments().length === 0) {
+    <div class="empty-state">
+      <i class="fas fa-building"></i>
+      <h3>No Departments Found</h3>
+      <p>No departments match your search criteria or no departments have been created yet.</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="fas fa-plus"></i>
+        Create First Department
+      </button>
+    </div>
+  }
+
+  <!-- Departments Grid -->
+  @else {
+    <div class="departments-grid">
+      @for (department of filteredDepartments(); track department.id) {
+        <div class="department-card" [class.inactive]="!department.isActive">
+          <div class="department-header">
+            <div class="department-info">
+              <h3>{{ department.name }}</h3>
+              <div class="department-status">
+                <span class="status-badge" [class.active]="department.isActive" [class.inactive]="!department.isActive">
+                  {{ department.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+            <div class="department-actions">
+              <div class="actions-dropdown">
+                <button class="btn btn-icon" data-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <button class="dropdown-item" (click)="openEditModal(department)">
+                    <i class="fas fa-edit"></i>
+                    Edit
+                  </button>
+                  <button class="dropdown-item" (click)="toggleDepartmentStatus(department)">
+                    <i class="fas" [class.fa-eye]="!department.isActive" [class.fa-eye-slash]="department.isActive"></i>
+                    {{ department.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item danger" (click)="deleteDepartment(department)">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="department-content">
+            <p class="department-description">{{ department.description }}</p>
+
+            <div class="department-details">
+              <div class="detail-row">
+                <div class="detail-item">
+                  <i class="fas fa-user-tie"></i>
+                  <span class="detail-label">Head of Department</span>
+                  <span class="detail-value">{{ department.headOfDepartment }}</span>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-item">
+                  <i class="fas fa-users"></i>
+                  <span class="detail-label">Employees</span>
+                  <span class="detail-value">{{ department.employeeCount }}</span>
+                </div>
+                <div class="detail-item">
+                  <i class="fas fa-calendar"></i>
+                  <span class="detail-label">Created</span>
+                  <span class="detail-value">{{ formatDate(department.createdAt) }}</span>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-item budget">
+                  <i class="fas fa-dollar-sign"></i>
+                  <span class="detail-label">Budget</span>
+                  <span class="detail-value budget-amount">{{ formatCurrency(department.budget) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="department-footer">
+            <button class="btn btn-outline-primary btn-sm" (click)="openEditModal(department)">
+              <i class="fas fa-edit"></i>
+              Edit Details
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Create Department Modal -->
+  @if (showCreateModal()) {
+    <div class="modal-overlay" (click)="closeModals()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Create New Department</h2>
+          <button class="btn btn-icon" (click)="closeModals()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <form [formGroup]="departmentForm" (ngSubmit)="createDepartment()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="name">Department Name *</label>
+              <input 
+                type="text" 
+                id="name"
+                formControlName="name"
+                class="form-control"
+                placeholder="Enter department name">
+              @if (departmentForm.get('name')?.invalid && departmentForm.get('name')?.touched) {
+                <div class="form-error">Department name is required (minimum 2 characters)</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description *</label>
+              <textarea 
+                id="description"
+                formControlName="description"
+                class="form-control"
+                rows="3"
+                placeholder="Describe the department's role and responsibilities"></textarea>
+              @if (departmentForm.get('description')?.invalid && departmentForm.get('description')?.touched) {
+                <div class="form-error">Description is required (minimum 10 characters)</div>
+              }
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="headOfDepartment">Head of Department *</label>
+                <input 
+                  type="text" 
+                  id="headOfDepartment"
+                  formControlName="headOfDepartment"
+                  class="form-control"
+                  placeholder="Department head name">
+                @if (departmentForm.get('headOfDepartment')?.invalid && departmentForm.get('headOfDepartment')?.touched) {
+                  <div class="form-error">Head of department is required</div>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="budget">Annual Budget *</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input 
+                    type="number" 
+                    id="budget"
+                    formControlName="budget"
+                    class="form-control"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01">
+                </div>
+                @if (departmentForm.get('budget')?.invalid && departmentForm.get('budget')?.touched) {
+                  <div class="form-error">Budget must be a positive number</div>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-check">
+                <input 
+                  type="checkbox" 
+                  id="isActive"
+                  formControlName="isActive"
+                  class="form-check-input">
+                <label for="isActive" class="form-check-label">
+                  Active Department
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModals()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="departmentForm.invalid">
+              <i class="fas fa-plus"></i>
+              Create Department
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Department Modal -->
+  @if (showEditModal()) {
+    <div class="modal-overlay" (click)="closeModals()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Edit Department</h2>
+          <button class="btn btn-icon" (click)="closeModals()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <form [formGroup]="departmentForm" (ngSubmit)="updateDepartment()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="editName">Department Name *</label>
+              <input 
+                type="text" 
+                id="editName"
+                formControlName="name"
+                class="form-control"
+                placeholder="Enter department name">
+              @if (departmentForm.get('name')?.invalid && departmentForm.get('name')?.touched) {
+                <div class="form-error">Department name is required (minimum 2 characters)</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="editDescription">Description *</label>
+              <textarea 
+                id="editDescription"
+                formControlName="description"
+                class="form-control"
+                rows="3"
+                placeholder="Describe the department's role and responsibilities"></textarea>
+              @if (departmentForm.get('description')?.invalid && departmentForm.get('description')?.touched) {
+                <div class="form-error">Description is required (minimum 10 characters)</div>
+              }
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editHeadOfDepartment">Head of Department *</label>
+                <input 
+                  type="text" 
+                  id="editHeadOfDepartment"
+                  formControlName="headOfDepartment"
+                  class="form-control"
+                  placeholder="Department head name">
+                @if (departmentForm.get('headOfDepartment')?.invalid && departmentForm.get('headOfDepartment')?.touched) {
+                  <div class="form-error">Head of department is required</div>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="editBudget">Annual Budget *</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input 
+                    type="number" 
+                    id="editBudget"
+                    formControlName="budget"
+                    class="form-control"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01">
+                </div>
+                @if (departmentForm.get('budget')?.invalid && departmentForm.get('budget')?.touched) {
+                  <div class="form-error">Budget must be a positive number</div>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-check">
+                <input 
+                  type="checkbox" 
+                  id="editIsActive"
+                  formControlName="isActive"
+                  class="form-check-input">
+                <label for="editIsActive" class="form-check-label">
+                  Active Department
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModals()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="departmentForm.invalid">
+              <i class="fas fa-save"></i>
+              Update Department
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

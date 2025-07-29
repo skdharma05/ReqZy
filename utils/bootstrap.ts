@@ -10,10 +10,10 @@ export async function ensureSuperUserExists() {
 
   console.log("🚀 No super user found. Creating default admin-admin...");
 
-  const hashedPassword = await bcrypt.hash("admin", 10); // you can change this
+  const hashedPassword = await bcrypt.hash("admin@123", 10); // you can change this
 
   const superUser = new UserModel({
-    email: "admin",
+    email: "admin@admin.com",
     password: hashedPassword,
     roleId: "admin", // Assuming this exists in Role collection
     departmentId: "admin", // Assuming this exists in Department collection

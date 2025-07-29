@@ -1,0 +1,151 @@
+<div class="approved-requests">
+  <div class="page-header">
+    <h1>Approved Requests</h1>
+    <button class="btn btn-primary" (click)="refreshData()">
+      <i class="fas fa-sync-alt"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search by item, requester, or department..." 
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+        class="form-control">
+      <i class="fas fa-search"></i>
+    </div>
+
+    <div class="filter-controls">
+      <select 
+        [value]="selectedDepartment()"
+        (change)="onDepartmentChange($event)"
+        class="form-control">
+        <option value="">All Departments</option>
+        <option value="IT">IT Department</option>
+        <option value="HR">Human Resources</option>
+        <option value="Finance">Finance</option>
+        <option value="Operations">Operations</option>
+      </select>
+
+      <select 
+        [value]="selectedDateRange()"
+        (change)="onDateRangeChange($event)"
+        class="form-control">
+        <option value="">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+
+      <div class="sort-controls">
+        <select 
+          [value]="sortBy()"
+          (change)="onSortChange($event)"
+          class="form-control">
+          <option value="approvedAt">Approval Date</option>
+          <option value="item">Item</option>
+          <option value="amount">Amount</option>
+        </select>
+        <button 
+          class="btn btn-outline-secondary"
+          (click)="toggleSortOrder()"
+          [title]="sortOrder() === 'asc' ? 'Sort Descending' : 'Sort Ascending'">
+          <i class="fas" [class.fa-sort-up]="sortOrder() === 'asc'" [class.fa-sort-down]="sortOrder() === 'desc'"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading approved requests...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (approvedRequests().length === 0) {
+    <div class="empty-state">
+      <i class="fas fa-check-circle"></i>
+      <h3>No Approved Requests</h3>
+      <p>No approved requests found matching your criteria.</p>
+    </div>
+  }
+
+  <!-- Approved Requests List -->
+  @else {
+    <div class="requests-grid">
+      @for (request of approvedRequests(); track request.id) {
+        <div class="request-card approved">
+          <div class="request-header">
+            <div class="request-info">
+              <h3>{{ request.item }}</h3>
+              <span class="request-id">#{{ request.id }}</span>
+            </div>
+            <div class="request-status">
+              <span class="status-badge approved">
+                <i class="fas fa-check-circle"></i>
+                Approved
+              </span>
+            </div>
+          </div>
+
+          <div class="request-details">
+            <div class="detail-row">
+              <span class="label">Quantity:</span>
+              <span class="value">{{ request.quantity }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Amount:</span>
+              <span class="value amount">{{ formatCurrency(request.amount) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Requester:</span>
+              <span class="value">{{ request.requester }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Department:</span>
+              <span class="value">{{ request.department }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Approved by:</span>
+              <span class="value">{{ request.approver }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Approved on:</span>
+              <span class="value">{{ formatDate(request.approvedAt) }}</span>
+            </div>
+          </div>
+
+          <div class="request-actions">
+            <button 
+              class="btn btn-outline-primary"
+              [routerLink]="['/purchase-requests', request.id]">
+              <i class="fas fa-eye"></i>
+              View Details
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Summary Stats -->
+  @if (approvedRequests().length > 0) {
+    <div class="summary-stats">
+      <div class="stat-card">
+        <div class="stat-value">{{ approvedRequests().length }}</div>
+        <div class="stat-label">Total Approved</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ getTotalApprovedAmount() | currency }}</div>
+        <div class="stat-label">Total Value</div>
+      </div>
+    </div>
+  }
+</div>

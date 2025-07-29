@@ -1,0 +1,240 @@
+<div class="analytics-dashboard">
+  <div class="page-header">
+    <h1>Purchase Request Analytics</h1>
+    <div class="header-actions">
+      <button class="btn btn-outline-primary" (click)="exportData()">
+        <i class="fas fa-download"></i>
+        Export Report
+      </button>
+      <button class="btn btn-primary" (click)="refreshData()">
+        <i class="fas fa-sync-alt"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-controls">
+      <select 
+        [value]="selectedTimeRange()"
+        (change)="onTimeRangeChange($event)"
+        class="form-control">
+        <option value="1month">Last Month</option>
+        <option value="3months">Last 3 Months</option>
+        <option value="6months">Last 6 Months</option>
+        <option value="1year">Last Year</option>
+        <option value="all">All Time</option>
+      </select>
+
+      <select 
+        [value]="selectedDepartment()"
+        (change)="onDepartmentChange($event)"
+        class="form-control">
+        <option value="">All Departments</option>
+        <option value="IT">IT Department</option>
+        <option value="HR">Human Resources</option>
+        <option value="Finance">Finance</option>
+        <option value="Operations">Operations</option>
+        <option value="Marketing">Marketing</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading analytics data...</p>
+    </div>
+  }
+
+  @else {
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card primary">
+        <div class="metric-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatNumber(analytics().totalRequests) }}</div>
+          <div class="metric-label">Total Requests</div>
+        </div>
+      </div>
+
+      <div class="metric-card success">
+        <div class="metric-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatNumber(analytics().approvedRequests) }}</div>
+          <div class="metric-label">Approved</div>
+          <div class="metric-percentage">{{ approvalRate() }}%</div>
+        </div>
+      </div>
+
+      <div class="metric-card danger">
+        <div class="metric-icon">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatNumber(analytics().rejectedRequests) }}</div>
+          <div class="metric-label">Rejected</div>
+          <div class="metric-percentage">{{ rejectionRate() }}%</div>
+        </div>
+      </div>
+
+      <div class="metric-card warning">
+        <div class="metric-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatNumber(analytics().pendingRequests) }}</div>
+          <div class="metric-label">Pending</div>
+          <div class="metric-percentage">{{ pendingRate() }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Value Metrics -->
+    <div class="value-metrics">
+      <div class="metric-card value">
+        <div class="metric-icon">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatCurrency(analytics().totalValue) }}</div>
+          <div class="metric-label">Total Request Value</div>
+        </div>
+      </div>
+
+      <div class="metric-card value-approved">
+        <div class="metric-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatCurrency(analytics().approvedValue) }}</div>
+          <div class="metric-label">Approved Value</div>
+          <div class="metric-percentage">{{ valueEfficiency() }}% efficiency</div>
+        </div>
+      </div>
+
+      <div class="metric-card time">
+        <div class="metric-icon">
+          <i class="fas fa-stopwatch"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ analytics().averageApprovalTime }}</div>
+          <div class="metric-label">Avg. Approval Time (days)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts and Tables -->
+    <div class="analytics-content">
+      <!-- Monthly Trends -->
+      <div class="chart-section">
+        <h2>Monthly Trends</h2>
+        <div class="chart-container">
+          @if (analytics().monthlyTrends.length > 0) {
+            <div class="trend-chart">
+              @for (trend of analytics().monthlyTrends; track trend.month) {
+                <div class="trend-bar">
+                  <div class="bar-container">
+                    <div 
+                      class="bar" 
+                      [style.height.%]="(trend.requests / 35) * 100">
+                    </div>
+                  </div>
+                  <div class="bar-label">{{ trend.month }}</div>
+                  <div class="bar-value">{{ trend.requests }}</div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-chart-state">
+              <i class="fas fa-chart-bar"></i>
+              <p>No trend data available</p>
+              <small>Connect to data source to see monthly trends</small>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Department Performance -->
+      <div class="table-section">
+        <h2>Department Performance</h2>
+        <div class="table-container">
+          @if (analytics().topDepartments.length > 0) {
+            <table class="performance-table">
+              <thead>
+                <tr>
+                  <th>Department</th>
+                  <th>Requests</th>
+                  <th>Total Value</th>
+                  <th>Approval Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (dept of analytics().topDepartments; track dept.name) {
+                  <tr>
+                    <td class="department-name">{{ dept.name }}</td>
+                    <td class="request-count">{{ formatNumber(dept.totalRequests) }}</td>
+                    <td class="value-amount">{{ formatCurrency(dept.totalValue) }}</td>
+                    <td class="approval-rate">
+                      <div class="rate-container">
+                        <span class="rate-text">{{ dept.approvalRate }}%</span>
+                        <div class="rate-bar">
+                          <div 
+                            class="rate-fill" 
+                            [style.width.%]="dept.approvalRate">
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="empty-table-state">
+              <i class="fas fa-building"></i>
+              <p>No department data available</p>
+              <small>Connect to data source to see department performance</small>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div class="chart-section">
+        <h2>Category Breakdown</h2>
+        <div class="category-stats">
+          @if (analytics().categoryStats.length > 0) {
+            @for (category of analytics().categoryStats; track category.name) {
+              <div class="category-item">
+                <div class="category-header">
+                  <span class="category-name">{{ category.name }}</span>
+                  <span class="category-count">{{ category.count }} requests</span>
+                </div>
+                <div class="category-value">{{ formatCurrency(category.value) }}</div>
+                <div class="category-bar">
+                  <div 
+                    class="category-fill" 
+                    [style.width.%]="(category.count / 45) * 100">
+                  </div>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-category-state">
+              <i class="fas fa-tags"></i>
+              <p>No category data available</p>
+              <small>Connect to data source to see category breakdown</small>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

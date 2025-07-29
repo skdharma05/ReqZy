@@ -1,0 +1,212 @@
+<div class="pr-create-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Create Purchase Request</h1>
+      <p>Fill out the form below to submit a new purchase requisition</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Form Container -->
+  <div class="form-container">
+    <form [formGroup]="prForm" (ngSubmit)="onSubmit()" class="pr-form">
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <h2 class="section-title">Basic Information</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item">Item Name *</label>
+            <input
+              id="item"
+              type="text"
+              formControlName="item"
+              class="form-control"
+              [class.error]="isFieldInvalid('item')"
+              placeholder="Enter item name or description"
+            />
+            @if (isFieldInvalid('item')) {
+              <div class="field-error">{{ getFieldError('item') }}</div>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              formControlName="description"
+              class="form-control"
+              rows="3"
+              placeholder="Additional details about the item (optional)"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="categoryId">Category *</label>
+            <select
+              id="categoryId"
+              formControlName="categoryId"
+              class="form-control"
+              [class.error]="isFieldInvalid('categoryId')"
+            >
+              <option value="">Select a category</option>
+              @for (category of categories(); track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select>
+            @if (isFieldInvalid('categoryId')) {
+              <div class="field-error">{{ getFieldError('categoryId') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="departmentId">Department</label>
+            <select
+              id="departmentId"
+              formControlName="departmentId"
+              class="form-control"
+            >
+              <option value="">Select department</option>
+              @for (department of departments(); track department.id) {
+                <option [value]="department.id">{{ department.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantity and Pricing Section -->
+      <div class="form-section">
+        <h2 class="section-title">Quantity & Pricing</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity">Quantity *</label>
+            <input
+              id="quantity"
+              type="number"
+              formControlName="quantity"
+              class="form-control"
+              [class.error]="isFieldInvalid('quantity')"
+              min="1"
+              step="1"
+            />
+            @if (isFieldInvalid('quantity')) {
+              <div class="field-error">{{ getFieldError('quantity') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="unitPrice">Unit Price *</label>
+            <input
+              id="unitPrice"
+              type="number"
+              formControlName="unitPrice"
+              class="form-control"
+              [class.error]="isFieldInvalid('unitPrice')"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+            />
+            @if (isFieldInvalid('unitPrice')) {
+              <div class="field-error">{{ getFieldError('unitPrice') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Total Value</label>
+            <div class="total-display">
+              {{ formatCurrency(getTotalValue()) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+        >
+          Cancel
+        </button>
+        
+        <!-- <button
+          type="button"
+          class="btn btn-outline"
+          (click)="onSaveAsDraft()"
+          [disabled]="isSubmitting()"
+        >
+          Save as Draft
+        </button> -->
+        
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="prForm.invalid || isSubmitting()"
+        >
+          @if (isSubmitting()) {
+            <span class="spinner"></span>
+            Creating...
+          } @else {
+            Create Request
+          }
+        </button>
+      </div>
+    </form>
+
+    <!-- Summary Card -->
+    <div class="summary-card">
+      <h3>Request Summary</h3>
+      
+      <div class="summary-item">
+        <span class="label">Item:</span>
+        <span class="value">{{ prForm.get('item')?.value || 'Not specified' }}</span>
+      </div>
+      
+      <div class="summary-item">
+        <span class="label">Quantity:</span>
+        <span class="value">{{ prForm.get('quantity')?.value || 0 }}</span>
+      </div>
+      
+      <div class="summary-item">
+        <span class="label">Unit Price:</span>
+        <span class="value">{{ formatCurrency(prForm.get('unitPrice')?.value || 0) }}</span>
+      </div>
+      
+      <hr class="summary-divider">
+      
+      <div class="summary-item total">
+        <span class="label">Total Value:</span>
+        <span class="value">{{ formatCurrency(getTotalValue()) }}</span>
+      </div>
+
+      <div class="summary-item">
+        <span class="label">Status:</span>
+        <span class="value status-pending">Will be Pending</span>
+      </div>
+    </div>
+  </div>
+</div>

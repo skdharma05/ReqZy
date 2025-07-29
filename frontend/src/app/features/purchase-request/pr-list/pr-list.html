@@ -1,0 +1,322 @@
+<div class="pr-list-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Purchase Requests</h1>
+      <p>Manage and track all purchase requisitions</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        class="btn btn-primary"
+        (click)="navigateToCreate()"
+      >
+        <span class="icon">+</span>
+        New Request
+      </button>
+      <button 
+        class="btn btn-secondary"
+        (click)="onRefresh()"
+        [disabled]="isLoading()"
+      >
+        <span class="icon">↻</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats().total }}</div>
+      <div class="stat-label">Total Requests</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-value">{{ stats().pending }}</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card stat-approved">
+      <div class="stat-value">{{ stats().approved }}</div>
+      <div class="stat-label">Approved</div>
+    </div>
+    <div class="stat-card stat-rejected">
+      <div class="stat-value">{{ stats().rejected }}</div>
+      <div class="stat-label">Rejected</div>
+    </div>
+  </div>
+
+  <!-- Advanced Filters Section -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <h3>Filters</h3>
+      <button 
+        class="btn btn-text"
+        (click)="toggleFilters()"
+      >
+        {{ showAdvancedFilters() ? 'Hide' : 'Show' }} Advanced
+      </button>
+    </div>
+
+    <!-- Basic Filters -->
+    <div class="basic-filters">
+      <div class="filter-group">
+        <label for="search">Search:</label>
+        <div class="search-input-wrapper">
+          <input 
+            id="search"
+            type="text"
+            [formControl]="searchControl"
+            placeholder="Search by item name, ID, or description..."
+            class="filter-input search-input"
+          />
+          <span class="search-icon">🔍</span>
+          @if (searchControl.value) {
+            <button 
+              class="clear-search"
+              (click)="clearSearch()"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          }
+        </div>
+      </div>
+      
+      <div class="filter-group">
+        <label for="status-filter">Status:</label>
+        <select 
+          id="status-filter"
+          [formControl]="statusFilter"
+          class="filter-select"
+        >
+          <option value="all">All Statuses</option>
+          <option value="draft">Draft</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="sort-by">Sort by:</label>
+        <select 
+          id="sort-by"
+          [formControl]="sortByControl"
+          class="filter-select"
+        >
+          <option value="createdAt-desc">Newest First</option>
+          <option value="createdAt-asc">Oldest First</option>
+          <option value="totalValue-desc">Highest Value</option>
+          <option value="totalValue-asc">Lowest Value</option>
+          <option value="item-asc">Item Name A-Z</option>
+          <option value="item-desc">Item Name Z-A</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Advanced Filters (Collapsible) -->
+    @if (showAdvancedFilters()) {
+      <div class="advanced-filters">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="department-filter">Department:</label>
+            <select 
+              id="department-filter"
+              [formControl]="departmentFilter"
+              class="filter-select"
+            >
+              <option value="all">All Departments</option>
+              @for (dept of departments(); track dept.id) {
+                <option [value]="dept.id">{{ dept.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="category-filter">Category:</label>
+            <select 
+              id="category-filter"
+              [formControl]="categoryFilter"
+              class="filter-select"
+            >
+              <option value="all">All Categories</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="created-by-filter">Created by:</label>
+            <select 
+              id="created-by-filter"
+              [formControl]="createdByFilter"
+              class="filter-select"
+            >
+              <option value="all">All Users</option>
+              <option value="me">My Requests</option>
+              @for (user of users(); track user.id) {
+                <option [value]="user.id">{{ user.email }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="value-min">Min Value:</label>
+            <input 
+              id="value-min"
+              type="number"
+              [formControl]="minValueControl"
+              placeholder="0"
+              class="filter-input number-input"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="value-max">Max Value:</label>
+            <input 
+              id="value-max"
+              type="number"
+              [formControl]="maxValueControl"
+              placeholder="No limit"
+              class="filter-input number-input"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="date-from">From Date:</label>
+            <input 
+              id="date-from"
+              type="date"
+              [formControl]="dateFromControl"
+              class="filter-input date-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="date-to">To Date:</label>
+            <input 
+              id="date-to"
+              type="date"
+              [formControl]="dateToControl"
+              class="filter-input date-input"
+            />
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button 
+            class="btn btn-primary btn-sm"
+            (click)="applyFilters()"
+          >
+            Apply Filters
+          </button>
+          <button 
+            class="btn btn-secondary btn-sm"
+            (click)="clearAllFilters()"
+          >
+            Clear All
+          </button>
+          <div class="active-filters-count">
+            @if (activeFiltersCount() > 0) {
+              <span class="filter-badge">{{ activeFiltersCount() }} active</span>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading purchase requests...</p>
+    </div>
+  }
+
+  <!-- PR List -->
+  @if (!isLoading()) {
+    <div class="pr-list">
+      @if (filteredPrs().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>No Purchase Requests Found</h3>
+          <p>
+            @if (filterStatus() !== 'all' || searchTerm()) {
+              No requests match your current filters.
+            } @else {
+              Get started by creating your first purchase request.
+            }
+          </p>
+          @if (filterStatus() === 'all' && !searchTerm()) {
+            <button 
+              class="btn btn-primary"
+              (click)="navigateToCreate()"
+            >
+              Create First Request
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="pr-grid">
+          @for (pr of filteredPrs(); track pr.id) {
+            <div 
+              class="pr-card"
+              (click)="navigateToDetail(pr)"
+            >
+              <div class="pr-card-header">
+                <div class="pr-id">{{ pr.id }}</div>
+                <div class="pr-status" [class]="getStatusClass(pr.status)">
+                  {{ pr.status | titlecase }}
+                </div>
+              </div>
+              
+              <div class="pr-card-content">
+                <h3 class="pr-item">{{ pr.item }}</h3>
+                <div class="pr-details">
+                  <div class="detail-row">
+                    <span class="label">Quantity:</span>
+                    <span class="value">{{ pr.quantity }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Total Value:</span>
+                    <span class="value">{{ formatCurrency(pr.totalValue) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Created:</span>
+                    <span class="value">{{ formatDate(pr.createdAt) }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="pr-card-actions" (click)="$event.stopPropagation()">
+                @if (canEdit(pr)) {
+                  <button 
+                    class="action-btn edit-btn"
+                    (click)="onEdit(pr, $event)"
+                    title="Edit Request"
+                  >
+                    ✏️
+                  </button>
+                }
+                <button 
+                  class="action-btn view-btn"
+                  (click)="navigateToDetail(pr)"
+                  title="View Details"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

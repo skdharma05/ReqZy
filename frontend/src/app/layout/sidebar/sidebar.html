@@ -1,0 +1,125 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+    <button 
+      class="collapse-toggle"
+      (click)="toggleSidebar()"
+      [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+      <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              [attr.d]="isCollapsed() ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      @for (item of navigationItems; track item.label) {
+        @if (hasPermission(item.permission)) {
+          <li class="nav-item">
+            <!-- Main Navigation Item -->
+            @if (item.children) {
+              <!-- Group with children -->
+              <button 
+                class="nav-link nav-group"
+                [class.active]="isActive(item.path)"
+                [class.expanded]="isGroupExpanded(item.label)"
+                (click)="toggleGroup(item.label)"
+                [attr.aria-expanded]="isGroupExpanded(item.label)">
+                <div class="nav-content">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="item.icon"></path>
+                  </svg>
+                  <span class="nav-label">{{ item.label }}</span>
+                  @if (item.badge) {
+                    <span class="nav-badge">{{ item.badge }}</span>
+                  }
+                </div>
+                <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+
+              <!-- Submenu -->
+              @if (isGroupExpanded(item.label)) {
+                <ul class="submenu">
+                  @for (child of item.children; track child.label) {
+                    @if (hasPermission(child.permission)) {
+                      <li class="submenu-item">
+                        <a 
+                          [routerLink]="child.path"
+                          class="submenu-link"
+                          [class.active]="isActive(child.path)"
+                          routerLinkActive="active">
+                          <svg class="submenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="child.icon"></path>
+                          </svg>
+                          <span class="submenu-label">{{ child.label }}</span>
+                          @if (child.badge) {
+                            <span class="submenu-badge">{{ child.badge }}</span>
+                          }
+                        </a>
+                      </li>
+                    }
+                  }
+                </ul>
+              }
+            } @else {
+              <!-- Single navigation item -->
+              <a 
+                [routerLink]="item.path"
+                class="nav-link"
+                [class.active]="isActive(item.path)"
+                routerLinkActive="active">
+                <div class="nav-content">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="item.icon"></path>
+                  </svg>
+                  <span class="nav-label">{{ item.label }}</span>
+                  @if (item.badge) {
+                    <span class="nav-badge">{{ item.badge }}</span>
+                  }
+                </div>
+              </a>
+            }
+          </li>
+        }
+      }
+    </ul>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      @if (!isCollapsed()) {
+        <p class="quick-actions-title">Quick Actions</p>
+      }
+      <div class="action-buttons">
+        <button 
+          class="action-btn"
+          routerLink="/purchase-requests/create"
+          [attr.title]="isCollapsed() ? 'Create New Request' : null">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          @if (!isCollapsed()) {
+            <span class="action-label">New Request</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Collapse indicator when collapsed -->
+    @if (isCollapsed()) {
+      <div class="collapse-indicator">
+        <div class="collapse-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    }
+  </div>
+</aside>
