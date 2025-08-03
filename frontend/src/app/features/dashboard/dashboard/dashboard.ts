@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { AuthService } from '../../../core/services/auth';
 import { PrService } from '../../purchase-request/services/pr';
 import { PurchaseRequest } from '../../../core/models';
@@ -34,14 +33,13 @@ interface RecentActivity {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterModule, DatePipe],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
 export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly prService = inject(PrService);
-  private readonly datePipe = inject(DatePipe);
 
   readonly currentUser = this.authService.currentUser;
   readonly isLoading = signal(true);
@@ -222,7 +220,11 @@ export class DashboardComponent implements OnInit {
     }
     
     // For older dates, show formatted date
-    return this.datePipe.transform(date, 'MMM d, y') || '';
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   }
 
   hasPermission(permission?: string): boolean {

@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApprovalService } from '../../../core/services/approval';
 import { PrService } from '../../purchase-request/services/pr';
 import { AuthService } from '../../../core/services/auth';
-import { ApprovalStatus } from '../../../core/models';
+import { ApprovalStatus, PRStatus } from '../../../core/models';
 
 interface ApprovedRequest {
   id: string;
@@ -50,54 +50,32 @@ export class ApprovedListComponent implements OnInit {
   async loadApprovedRequests(): Promise<void> {
     this.isLoading.set(true);
     try {
-      // Get all approved approvals using the correct method
-      this.approvalService.getAllApprovals({ status: ApprovalStatus.APPROVED }).subscribe({
-        next: async (approvals) => {
-          const approvedRequests: ApprovedRequest[] = [];
+      // Load approved PRs using authorized endpoint
+      this.prService.getAuthorized({ status: PRStatus.APPROVED }).subscribe({
+        next: (prs) => {
+          const approvedRequests: ApprovedRequest[] = prs.map(pr => ({
+            id: pr.id,
+            item: pr.item,
+            quantity: pr.quantity,
+            amount: pr.totalValue,
+            status: pr.status,
+            approvedAt: new Date(pr.updatedAt || pr.createdAt),
+            approver: 'System', // You can enhance this later
+            requester: pr.creator?.email || 'Unknown',
+            department: pr.department?.name || 'Unknown'
+          }));
           
-          for (const approval of approvals) {
-            try {
-              // Get PR details for each approved item
-              this.prService.getById(approval.prId).subscribe({
-                next: (pr) => {
-                  if (pr) {
-                    approvedRequests.push({
-                      id: pr.id,
-                      item: pr.item,
-                      quantity: pr.quantity,
-                      amount: pr.totalValue,
-                      status: pr.status,
-                      approvedAt: approval.approvedAt ? new Date(approval.approvedAt) : new Date(),
-                      approver: approval.approver?.email || 'Unknown',
-                      requester: pr.creator?.email || 'Unknown',
-                      department: pr.department?.name || 'Unknown'
-                    });
-                  }
-                },
-                error: (error) => {
-                  console.warn('Failed to load PR details for approval:', error);
-                }
-              });
-            } catch (error) {
-              console.warn('Failed to process approval:', error);
-            }
-          }
-
-          // Wait a bit for all subscriptions to complete, then apply filters
-          setTimeout(() => {
-            this.approvedRequests.set(this.applyFiltersAndSort(approvedRequests));
-          }, 1000);
+          this.approvedRequests.set(this.applyFiltersAndSort(approvedRequests));
+          this.isLoading.set(false);
         },
         error: (error) => {
           console.error('Failed to load approved requests:', error);
+          this.isLoading.set(false);
         }
       });
     } catch (error) {
       console.error('Failed to load approved requests:', error);
-    } finally {
-      setTimeout(() => {
-        this.isLoading.set(false);
-      }, 1000);
+      this.isLoading.set(false);
     }
   }
 

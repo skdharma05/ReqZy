@@ -95,6 +95,32 @@ export class PrService {
       );
   }
 
+  // Get authorized PRs for current user with optional filters
+  getAuthorized(filters?: PRFilter): Observable<PurchaseRequest[]> {
+    this.isLoadingSignal.set(true);
+    
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (value instanceof Date) {
+            params = params.set(key, value.toISOString());
+          } else {
+            params = params.set(key, value.toString());
+          }
+        }
+      });
+    }
+
+    return this.http.get<PurchaseRequest[]>(`${this.apiUrl}/pr/authorized`, { params })
+      .pipe(
+        tap(prs => {
+          this.prsSignal.set(prs);
+          this.isLoadingSignal.set(false);
+        })
+      );
+  }
+
   // Update PR
   update(id: string, updates: UpdatePRRequest): Observable<PurchaseRequest> {
     this.isLoadingSignal.set(true);

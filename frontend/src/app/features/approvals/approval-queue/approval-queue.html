@@ -10,8 +10,8 @@
         <button 
           class="btn btn-secondary"
           (click)="refresh()"
-          [disabled]="loading()">
-          @if (loading()) {
+          [disabled]="isLoading()">
+          @if (isLoading()) {
             <div class="btn-spinner"></div>
           } @else {
             <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,8 +28,8 @@
   <div class="statistics-grid">
     <div class="stat-card">
       <div class="stat-content">
-        <div class="stat-value">{{ statistics().total }}</div>
-        <div class="stat-label">Total Approvals</div>
+        <div class="stat-value">{{ pendingRequests().length }}</div>
+        <div class="stat-label">Pending Requests</div>
       </div>
       <div class="stat-icon stat-icon-total">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,36 +40,12 @@
 
     <div class="stat-card">
       <div class="stat-content">
-        <div class="stat-value">{{ statistics().pending }}</div>
-        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ filteredRequests().length }}</div>
+        <div class="stat-label">Filtered Results</div>
       </div>
       <div class="stat-icon stat-icon-pending">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics().highPriority }}</div>
-        <div class="stat-label">High Priority</div>
-      </div>
-      <div class="stat-icon stat-icon-high">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
-        </svg>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics().overdue }}</div>
-        <div class="stat-label">Overdue</div>
-      </div>
-      <div class="stat-icon stat-icon-overdue">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
       </div>
     </div>
@@ -88,82 +64,43 @@
             class="search-input"
             placeholder="Search by PR ID, item, or requester..."
             [value]="searchTerm()"
-            (input)="setSearchTerm($event.target.value)">
+            (input)="onSearchChange($event)">
         </div>
       </div>
 
       <div class="filter-group">
-        <select 
-          class="filter-select"
-          [value]="filterStatus()"
-          (change)="setFilterStatus($event.target.value)">
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
+        <!-- Simplified - no filter dropdown for now -->
       </div>
 
-      @if (selectedCount() > 0) {
-        <div class="batch-actions">
-          <span class="selected-count">{{ selectedCount() }} selected</span>
-          <button class="btn btn-primary" (click)="openBatchModal()">
-            Batch Process
-          </button>
-          <button class="btn btn-secondary" (click)="clearSelection()">
-            Clear
-          </button>
-        </div>
-      }
+      <!-- Removed batch actions for simplicity -->
     </div>
   </div>
 
   <!-- Error Alert -->
-  @if (error()) {
-    <div class="alert alert-error">
-      <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-      {{ error() }}
-      <button class="alert-close" (click)="clearError()">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-  }
+  <!-- Removed error handling for simplicity -->
 
   <!-- Approvals Table -->
   <div class="table-container">
     <div class="table-header">
-      <h3 class="table-title">Approval Requests</h3>
-      <div class="table-actions">
-        @if (filteredApprovals().length > 0) {
-          <button 
-            class="btn btn-secondary btn-sm"
-            (click)="selectAllApprovals()">
-            Select All
-          </button>
-        }
-      </div>
+      <h3 class="table-title">Pending Requests</h3>
     </div>
 
-    @if (loading()) {
+    @if (isLoading()) {
       <div class="loading-container">
         <div class="loading-spinner"></div>
-        <p class="loading-text">Loading approvals...</p>
+        <p class="loading-text">Loading pending requests...</p>
       </div>
-    } @else if (filteredApprovals().length === 0) {
+    } @else if (filteredRequests().length === 0) {
       <div class="empty-state">
         <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
-        <h3 class="empty-title">No Approvals Found</h3>
+        <h3 class="empty-title">No Pending Requests</h3>
         <p class="empty-description">
-          @if (searchTerm() || filterStatus() !== 'all') {
-            No approvals match your current filters. Try adjusting your search criteria.
+          @if (searchTerm()) {
+            No requests match your search criteria.
           } @else {
-            There are no pending approvals at the moment.
+            There are no pending requests at the moment.
           }
         </p>
       </div>
@@ -172,94 +109,53 @@
         <table class="approvals-table">
           <thead>
             <tr>
-              <th class="checkbox-column">
-                <input 
-                  type="checkbox" 
-                  [checked]="selectedCount() === filteredApprovals().length && filteredApprovals().length > 0"
-                  (change)="selectedCount() === filteredApprovals().length ? clearSelection() : selectAllApprovals()">
-              </th>
               <th>Purchase Request</th>
               <th>Requester</th>
               <th>Amount</th>
-              <th>Priority</th>
-              <th>Days Pending</th>
+              <th>Date Created</th>
               <th>Status</th>
               <th class="actions-column">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (item of filteredApprovals(); track item.approval.id) {
+            @for (pr of filteredRequests(); track pr.id) {
               <tr class="approval-row">
-                <td class="checkbox-column">
-                  <input 
-                    type="checkbox"
-                    [checked]="selectedApprovals().has(item.approval.id)"
-                    (change)="toggleApprovalSelection(item.approval.id)">
-                </td>
                 <td>
                   <div class="pr-info">
-                    <div class="pr-id">{{ item.pr.id }}</div>
-                    <div class="pr-item">{{ item.pr.item }}</div>
-                    <div class="pr-quantity">Qty: {{ item.pr.quantity }}</div>
+                    <div class="pr-id">{{ pr.id }}</div>
+                    <div class="pr-item">{{ pr.item }}</div>
+                    <div class="pr-quantity">Qty: {{ pr.quantity }}</div>
                   </div>
                 </td>
                 <td>
                   <div class="user-info">
-                    <div class="user-email">{{ item.pr.creator?.email || 'Unknown' }}</div>
-                    <div class="user-department">{{ item.pr.department?.name || 'Unknown Dept' }}</div>
+                    <div class="user-email">{{ pr.creator?.email || 'Unknown' }}</div>
+                    <div class="user-department">{{ pr.department?.name || 'Unknown Dept' }}</div>
                   </div>
                 </td>
                 <td>
-                  <div class="amount">{{ formatCurrency(item.pr.totalValue) }}</div>
+                  <div class="amount">{{ formatCurrency(pr.totalValue) }}</div>
                 </td>
                 <td>
-                  <span class="priority-badge" [class]="getPriorityClass(item.priority)">
-                    {{ item.priority | titlecase }}
-                  </span>
+                  <div class="date">{{ formatDate(pr.createdAt) }}</div>
                 </td>
                 <td>
-                  <div class="days-pending">
-                    {{ item.daysPending }} {{ item.daysPending === 1 ? 'day' : 'days' }}
-                    @if (item.daysPending > 7) {
-                      <span class="overdue-indicator">⚠️</span>
-                    }
-                  </div>
-                </td>
-                <td>
-                  <span class="status-badge" [class]="getStatusClass(item.approval.status)">
-                    {{ item.approval.status | titlecase }}
+                  <span class="status-badge status-pending">
+                    {{ pr.status | titlecase }}
                   </span>
                 </td>
                 <td class="actions-column">
-                  @if (item.approval.status === 'pending') {
-                    <div class="action-buttons">
-                      <button 
-                        class="action-btn approve"
-                        (click)="onApprove(item.approval)"
-                        [disabled]="loading()"
-                        title="Approve">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                      </button>
-                      <button 
-                        class="action-btn reject"
-                        (click)="onReject(item.approval, 'Rejected from approval queue')"
-                        [disabled]="loading()"
-                        title="Reject">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  } @else {
-                    <div class="approval-details">
-                      <div class="approval-date">{{ formatDate(item.approval.approvedAt || item.approval.createdAt || '') }}</div>
-                      @if (item.approval.comments) {
-                        <div class="approval-comments">{{ item.approval.comments }}</div>
-                      }
-                    </div>
-                  }
+                  <div class="action-buttons">
+                    <button 
+                      class="action-btn view"
+                      [routerLink]="['/purchase-requests', pr.id]"
+                      title="View Details">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             }
@@ -269,71 +165,5 @@
     }
   </div>
 
-  <!-- Batch Processing Modal -->
-  @if (showBatchModal()) {
-    <div class="modal-overlay" (click)="closeBatchModal()">
-      <div class="modal-container" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3 class="modal-title">Batch Process Approvals</h3>
-          <button class="modal-close" (click)="closeBatchModal()">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-
-        <form [formGroup]="batchForm" (ngSubmit)="processBatchApprovals()" class="modal-form">
-          <div class="modal-body">
-            <div class="batch-summary">
-              <p>You are about to process <strong>{{ selectedCount() }}</strong> approval(s).</p>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Action</label>
-              <select class="form-select" formControlName="action">
-                <option value="approve">Approve All</option>
-                <option value="reject">Reject All</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">
-                Comments 
-                @if (batchForm.get('action')?.value === 'reject') {
-                  <span class="required">*</span>
-                }
-              </label>
-              <textarea 
-                class="form-textarea"
-                formControlName="comments"
-                rows="3"
-                [placeholder]="batchForm.get('action')?.value === 'reject' ? 'Please provide a reason for rejection...' : 'Optional comments...'">
-              </textarea>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-secondary"
-              (click)="closeBatchModal()"
-              [disabled]="processingBatch()">
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              class="btn btn-primary"
-              [disabled]="processingBatch() || (batchForm.get('action')?.value === 'reject' && !batchForm.get('comments')?.value?.trim())">
-              @if (processingBatch()) {
-                <div class="btn-spinner"></div>
-                Processing...
-              } @else {
-                {{ batchForm.get('action')?.value === 'approve' ? 'Approve All' : 'Reject All' }}
-              }
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
+  <!-- Removed batch processing modal for simplicity -->
 </div>

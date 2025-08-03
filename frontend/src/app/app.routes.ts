@@ -5,7 +5,7 @@ import { roleGuard } from './core/guards/role-guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/reports/analytics',
+    redirectTo: '/purchase-requests',
     pathMatch: 'full'
   },
   {
@@ -124,6 +124,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/reports/analytics'
+    redirectTo: '/purchase-requests'
   }
 ];

@@ -10,29 +10,35 @@ export async function createPR(req: Request, res: Response) {
   }
 }
 
-export async function getAllPRs(req: Request, res: Response) {
+export const getAllPRs = async (req: Request, res: Response) => {
   try {
-    // Extract query parameters for filtering
-    const filters = {
-      status: req.query.status as string,
-      departmentId: req.query.departmentId as string,
-      categoryId: req.query.categoryId as string,
-      createdBy: req.query.createdBy as string,
-      startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
-      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
-    };
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-    // Remove undefined values
-    const cleanFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, v]) => v !== undefined)
-    );
-
-    const prs = await PRService.getAll(cleanFilters);
+    const prs = await PRService.getAuthorizedPRs(userId, req.query);
     res.json(prs);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Error fetching PRs:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
+
+export const getAuthorizedPRs = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const prs = await PRService.getAuthorizedPRs(userId, req.query);
+    res.json(prs);
+  } catch (error) {
+    console.error("Error fetching authorized PRs:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export async function getPRById(req: Request, res: Response) {
   try {

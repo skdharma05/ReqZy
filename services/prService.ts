@@ -28,6 +28,43 @@ export class PRService {
   }
 
   /**
+   * Fetch authorized PRs for a specific user with optional filtering
+   * Users can see:
+   * 1. PRs they created
+   * 2. PRs they can approve (based on approval records)
+   * 3. Approved/Rejected PRs from their department (for visibility)
+   */
+  static async getAuthorizedPRs(userId: string, filters: Record<string, any> = {}): Promise<IPurchaseRequisition[]> {
+    const { ApprovalModel } = await import("../models/approval");
+    
+    // Get PRs user can approve (has pending approval records)
+    const approvablePRIds = await ApprovalModel.find({
+      approverId: userId,
+      status: "pending"
+    }).distinct("prId");
+
+    // Build authorization query
+    const authQuery = {
+      $or: [
+        { createdBy: userId }, // PRs user created
+        { _id: { $in: approvablePRIds } }, // PRs user can approve
+      ]
+    };
+
+    // Combine with filters
+    const finalQuery = {
+      ...authQuery,
+      ...filters
+    };
+
+    return PurchaseRequisitionModel.find(finalQuery)
+      .populate("createdBy", "email roleId departmentId")
+      .populate("departmentId", "name")
+      .populate("categoryId", "name")
+      .exec();
+  }
+
+  /**
    * Fetch a single PR by its ID
    */
   static async getById(prId: string): Promise<IPurchaseRequisition> {

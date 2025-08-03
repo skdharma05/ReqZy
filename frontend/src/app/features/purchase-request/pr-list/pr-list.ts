@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PrService, PRFilter } from '../services/pr';
@@ -28,10 +28,12 @@ export class PrListComponent implements OnInit {
   private readonly departmentService = inject(DepartmentService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   // Signals for reactive state
   readonly isLoading = this.prService.isLoading;
   readonly currentUser = this.authService.currentUser;
+  readonly isMyRequestsView = signal<boolean>(false);
   
   // Local state signals
   readonly categories = signal<Category[]>([]);
@@ -101,13 +103,26 @@ export class PrListComponent implements OnInit {
   readonly PRStatus = PRStatus; // For template use
 
   ngOnInit(): void {
-    this.loadInitialData();
+    // Check if this is the "my requests" view by listening to route changes
+    this.route.url.subscribe(urlSegments => {
+      const isMyView = urlSegments.some(segment => segment.path === 'my');
+      this.isMyRequestsView.set(isMyView);
+      this.loadInitialData();
+    });
+    
     this.setupFilterListeners();
   }
 
   private loadInitialData(): void {
-    // Load PRs
-    this.prService.getAll().subscribe();
+    // Load PRs - filter by current user if this is "my requests" view
+    if (this.isMyRequestsView()) {
+      const currentUserId = this.currentUser()?.id;
+      if (currentUserId) {
+        this.prService.getAuthorized({ createdBy: currentUserId }).subscribe();
+      }
+    } else {
+      this.prService.getAuthorized().subscribe();
+    }
     
     // Load reference data for filter options
     this.categoryService.getAll().subscribe(categories => {

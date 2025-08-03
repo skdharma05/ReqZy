@@ -12,6 +12,7 @@ import {
 import {
   createPR,
   getAllPRs,
+  getAuthorizedPRs,
   getPRById,
   getPRsByUser,
   getPRsByDepartment,
@@ -65,6 +66,7 @@ router.post("/users/:id/reset-password", authenticate, authorize("manage_users")
 
 // PR Routes
 router.get("/pr", authenticate, authorize("view_pr"), getAllPRs);
+router.get("/pr/authorized", authenticate, authorize("view_pr"), getAuthorizedPRs);
 router.post(
   "/pr",
   authenticate,

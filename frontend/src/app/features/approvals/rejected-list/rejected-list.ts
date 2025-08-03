@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApprovalService } from '../../../core/services/approval';
 import { PrService } from '../../purchase-request/services/pr';
 import { AuthService } from '../../../core/services/auth';
-import { ApprovalStatus } from '../../../core/models';
+import { ApprovalStatus, PRStatus } from '../../../core/models';
 
 interface RejectedRequest {
   id: string;
@@ -51,55 +51,33 @@ export class RejectedListComponent implements OnInit {
   async loadRejectedRequests(): Promise<void> {
     this.isLoading.set(true);
     try {
-      // Get all rejected approvals
-      this.approvalService.getAllApprovals({ status: ApprovalStatus.REJECTED }).subscribe({
-        next: async (approvals) => {
-          const rejectedRequests: RejectedRequest[] = [];
+      // Load rejected PRs using authorized endpoint
+      this.prService.getAuthorized({ status: PRStatus.REJECTED }).subscribe({
+        next: (prs) => {
+          const rejectedRequests: RejectedRequest[] = prs.map(pr => ({
+            id: pr.id,
+            item: pr.item,
+            quantity: pr.quantity,
+            amount: pr.totalValue,
+            status: pr.status,
+            rejectedAt: new Date(pr.updatedAt || pr.createdAt),
+            rejectedBy: 'System', // You can enhance this later
+            requester: pr.creator?.email || 'Unknown',
+            department: pr.department?.name || 'Unknown',
+            rejectionReason: 'Rejected by approver' // You can enhance this later
+          }));
           
-          for (const approval of approvals) {
-            try {
-              // Get PR details for each rejected item
-              this.prService.getById(approval.prId).subscribe({
-                next: (pr) => {
-                  if (pr) {
-                    rejectedRequests.push({
-                      id: pr.id,
-                      item: pr.item,
-                      quantity: pr.quantity,
-                      amount: pr.totalValue,
-                      status: pr.status,
-                      rejectedAt: approval.approvedAt ? new Date(approval.approvedAt) : new Date(),
-                      rejectedBy: approval.approver?.email || 'Unknown',
-                      requester: pr.creator?.email || 'Unknown',
-                      department: pr.department?.name || 'Unknown',
-                      rejectionReason: approval.comments || 'No reason provided'
-                    });
-                  }
-                },
-                error: (error) => {
-                  console.warn('Failed to load PR details for rejection:', error);
-                }
-              });
-            } catch (error) {
-              console.warn('Failed to process rejection:', error);
-            }
-          }
-
-          // Wait a bit for all subscriptions to complete, then apply filters
-          setTimeout(() => {
-            this.rejectedRequests.set(this.applyFiltersAndSort(rejectedRequests));
-          }, 1000);
+          this.rejectedRequests.set(this.applyFiltersAndSort(rejectedRequests));
+          this.isLoading.set(false);
         },
         error: (error) => {
           console.error('Failed to load rejected requests:', error);
+          this.isLoading.set(false);
         }
       });
     } catch (error) {
       console.error('Failed to load rejected requests:', error);
-    } finally {
-      setTimeout(() => {
-        this.isLoading.set(false);
-      }, 1000);
+      this.isLoading.set(false);
     }
   }
 
