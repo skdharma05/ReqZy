@@ -227,9 +227,10 @@ export class PrListComponent implements OnInit {
   }
 
   private matchesSearch(pr: PurchaseRequest, search: string): boolean {
+    const prId = pr._id || pr.id || '';
     return (
       pr.item.toLowerCase().includes(search) ||
-      pr.id.toLowerCase().includes(search)
+      prId.toLowerCase().includes(search)
     );
   }
 
@@ -291,7 +292,12 @@ export class PrListComponent implements OnInit {
   }
 
   navigateToDetail(pr: PurchaseRequest): void {
-    this.router.navigate(['/purchase-requests', pr.id]);
+    const prId = pr._id || pr.id;
+    if (prId) {
+      this.router.navigate(['/purchase-requests', prId]);
+    } else {
+      console.error('Cannot navigate: PR has no valid ID', pr);
+    }
   }
 
   // Utility methods for template
@@ -324,7 +330,12 @@ export class PrListComponent implements OnInit {
 
   onEdit(pr: PurchaseRequest, event: Event): void {
     event.stopPropagation();
-    this.router.navigate(['/purchase-requests', pr.id, 'edit']);
+    const prId = pr._id || pr.id;
+    if (prId) {
+      this.router.navigate(['/purchase-requests', prId, 'edit']);
+    } else {
+      console.error('Cannot edit: PR has no valid ID', pr);
+    }
   }
 
   onRefresh(): void {

@@ -156,12 +156,12 @@ export class DashboardComponent implements OnInit {
       if (pr.status === 'approved') {
         type = 'approved';
         iconClass = 'green';
-        title = `Purchase Request #${pr.id} approved`;
+        title = `Purchase Request #${pr._id || pr.id} approved`;
         subtitle = `${pr.item} request has been approved`;
       } else if (pr.status === 'rejected') {
         type = 'rejected';
         iconClass = 'red';
-        title = `Purchase Request #${pr.id} rejected`;
+        title = `Purchase Request #${pr._id || pr.id} rejected`;
         subtitle = `${pr.item} request has been rejected`;
       } else if (pr.status === 'pending') {
         if (new Date(pr.createdAt).getTime() === new Date(pr.updatedAt).getTime()) {
@@ -172,18 +172,18 @@ export class DashboardComponent implements OnInit {
         } else {
           type = 'updated';
           iconClass = 'yellow';
-          title = `Purchase Request #${pr.id} awaiting approval`;
+          title = `Purchase Request #${pr._id || pr.id} awaiting approval`;
           subtitle = `${pr.item} pending review`;
         }
       } else {
         type = 'updated';
         iconClass = 'purple';
-        title = `Purchase Request #${pr.id} updated`;
+        title = `Purchase Request #${pr._id || pr.id} updated`;
         subtitle = pr.item;
       }
 
       return {
-        id: pr.id,
+        id: pr._id || pr.id || '',
         type,
         title,
         subtitle,

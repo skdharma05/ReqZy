@@ -98,7 +98,7 @@
   } @else {
     <!-- Departments Grid -->
     <div class="departments-grid">
-      @for (department of filteredDepartments(); track department._id || department.id) {
+      @for (department of filteredDepartments(); track department._id) {
         <div class="department-card">
           <div class="department-header">
             <div class="department-info">

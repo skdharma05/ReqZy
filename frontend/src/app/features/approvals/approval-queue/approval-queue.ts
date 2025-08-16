@@ -51,7 +51,7 @@ export class ApprovalQueueComponent implements OnInit {
     
     return this.pendingRequests().filter(pr => 
       pr.item.toLowerCase().includes(search) ||
-      pr.id.toLowerCase().includes(search) ||
+      (pr._id || pr.id || '').toLowerCase().includes(search) ||
       (pr.creator?.email || '').toLowerCase().includes(search)
     );
   }

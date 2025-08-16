@@ -54,7 +54,7 @@ export class ApprovedListComponent implements OnInit {
       this.prService.getAuthorized({ status: PRStatus.APPROVED }).subscribe({
         next: (prs) => {
           const approvedRequests: ApprovedRequest[] = prs.map(pr => ({
-            id: pr.id,
+            id: pr._id || pr.id || '',
             item: pr.item,
             quantity: pr.quantity,
             amount: pr.totalValue,

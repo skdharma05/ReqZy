@@ -2,9 +2,7 @@
   <div class="page-header">
     <div class="header-content">
       <h1>Department Management</h1>
-      <p class="header-subtitle">
-        Manage organizational departments and their settings.
-      </p>
+      <p class="header-subtitle">Manage organizational departments and their configurations</p>
     </div>
     <button class="btn btn-primary" (click)="openCreateModal()">
       <i class="fas fa-plus"></i>
@@ -41,7 +39,7 @@
       </div>
       <div class="stat-content">
         <div class="stat-value">{{ getActiveDepartmentsCount() }}</div>
-        <div class="stat-label">Total Departments</div>
+        <div class="stat-label">Active Departments</div>
       </div>
     </div>
 
@@ -51,13 +49,13 @@
       </div>
       <div class="stat-content">
         <div class="stat-value">{{ departments().length }}</div>
-        <div class="stat-label">Departments Available</div>
+        <div class="stat-label">Total Departments</div>
       </div>
     </div>
 
     <div class="stat-card">
       <div class="stat-icon info">
-        <i class="fas fa-chart-line"></i>
+        <i class="fas fa-dollar-sign"></i>
       </div>
       <div class="stat-content">
         <div class="stat-value">{{ formatCurrency(getTotalBudget()) }}</div>
@@ -66,7 +64,7 @@
     </div>
   </div>
 
-  <!-- Search -->
+  <!-- Search and Filters -->
   <div class="controls-section">
     <div class="search-box">
       <input 
@@ -79,13 +77,16 @@
     </div>
   </div>
 
-  <!-- Loading/Empty States -->
+  <!-- Loading State -->
   @if (isLoading()) {
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Loading departments...</p>
     </div>
-  } @else if (filteredDepartments().length === 0) {
+  }
+
+  <!-- Empty State -->
+  @else if (filteredDepartments().length === 0) {
     <div class="empty-state">
       <i class="fas fa-building"></i>
       <h3>No Departments Found</h3>
@@ -95,10 +96,12 @@
         Create First Department
       </button>
     </div>
-  } @else {
-    <!-- Departments Grid -->
+  }
+
+  <!-- Departments Grid -->
+  @else {
     <div class="departments-grid">
-      @for (department of filteredDepartments(); track department._id || department.id) {
+      @for (department of filteredDepartments(); track department._id) {
         <div class="department-card">
           <div class="department-header">
             <div class="department-info">
@@ -110,26 +113,41 @@
               </div>
             </div>
             <div class="department-actions">
-              <button class="btn btn-outline-primary btn-sm" (click)="openEditModal(department)">
-                <i class="fas fa-edit"></i>
-                Edit
-              </button>
-              <button class="btn btn-outline-danger btn-sm" (click)="deleteDepartment(department)">
-                <i class="fas fa-trash"></i>
-                Delete
-              </button>
+              <div class="actions-dropdown">
+                <button class="btn btn-icon" data-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <button class="dropdown-item" (click)="openEditModal(department)">
+                    <i class="fas fa-edit"></i>
+                    Edit
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item danger" (click)="deleteDepartment(department)">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="department-content">
             <p class="department-description">Department for {{ department.name }}</p>
           </div>
+
+          <div class="department-footer">
+            <button class="btn btn-outline-primary btn-sm" (click)="openEditModal(department)">
+              <i class="fas fa-edit"></i>
+              Edit Details
+            </button>
+          </div>
         </div>
       }
     </div>
   }
 
-  <!-- Create Modal -->
+  <!-- Create Department Modal -->
   @if (showCreateModal()) {
     <div class="modal-overlay" (click)="closeModals()">
       <div class="modal-content" (click)="$event.stopPropagation()">
@@ -167,8 +185,23 @@
       </div>
     </div>
   }
+          </div>
 
-  <!-- Edit Modal -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModals()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="departmentForm.invalid">
+              <i class="fas fa-plus"></i>
+              Create Department
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Department Modal -->
   @if (showEditModal()) {
     <div class="modal-overlay" (click)="closeModals()">
       <div class="modal-content" (click)="$event.stopPropagation()">
@@ -197,6 +230,28 @@
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="departmentForm.invalid">
+              <i class="fas fa-save"></i>
+              Update Department
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+                  class="form-check-input">
+                <label for="editIsActive" class="form-check-label">
+                  Active Department
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModals()">
+              Cancel
+            </button>
             <button type="submit" class="btn btn-primary" [disabled]="departmentForm.invalid">
               <i class="fas fa-save"></i>
               Update Department

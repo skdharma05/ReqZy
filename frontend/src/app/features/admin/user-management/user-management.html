@@ -45,8 +45,8 @@
           (change)="onDepartmentFilterChange($event)"
           [value]="selectedDepartmentFilter()">
           <option value="">All Departments</option>
-          @for (department of departments(); track department.id) {
-            <option [value]="department.id">{{ department.name }}</option>
+          @for (department of departments(); track department._id || department.id) {
+            <option [value]="department._id || department.id">{{ department.name }}</option>
           }
         </select>
       </div>
@@ -302,8 +302,8 @@
               class="form-select"
               [class.error]="isFieldInvalid('departmentId')">
               <option value="">Select a department</option>
-              @for (department of departments(); track department.id) {
-                <option [value]="department.id">{{ department.name }}</option>
+              @for (department of departments(); track department._id || department.id) {
+                <option [value]="department._id || department.id">{{ department.name }}</option>
               }
             </select>
             @if (isFieldInvalid('departmentId')) {

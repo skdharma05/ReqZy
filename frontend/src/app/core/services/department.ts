@@ -39,7 +39,7 @@ export class DepartmentService {
     return this.http.get<Department>(`${this.apiUrl}/${id}`);
   }
 
-  create(department: Omit<Department, 'id'>): Observable<Department> {
+  create(department: Omit<Department, '_id'>): Observable<Department> {
     return this.http.post<Department>(this.apiUrl, department);
   }
 
@@ -62,10 +62,10 @@ export class DepartmentService {
   }
 
   /**
-   * Get active departments only
+   * Get active departments - since there's no isActive field, return all
    */
   getActiveDepartments(): Department[] {
-    return this._departments().filter(dept => dept.isActive !== false);
+    return this._departments();
   }
 
   /**

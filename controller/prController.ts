@@ -3,9 +3,23 @@ import PRService from "../services/prService";
 
 export async function createPR(req: Request, res: Response) {
   try {
-    const pr = await PRService.create(req.body);
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized - user not found" });
+    }
+
+    // Add the createdBy field from the authenticated user
+    const prData = {
+      ...req.body,
+      createdBy: userId
+    };
+
+    console.log('Creating PR with data:', prData);
+    const pr = await PRService.create(prData);
+    console.log('Created PR:', pr);
     res.status(201).json(pr);
   } catch (err: any) {
+    console.error('Error creating PR:', err);
     res.status(500).json({ error: err.message });
   }
 }

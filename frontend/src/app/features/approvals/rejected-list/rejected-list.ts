@@ -55,7 +55,7 @@ export class RejectedListComponent implements OnInit {
       this.prService.getAuthorized({ status: PRStatus.REJECTED }).subscribe({
         next: (prs) => {
           const rejectedRequests: RejectedRequest[] = prs.map(pr => ({
-            id: pr.id,
+            id: pr._id || pr.id || '',
             item: pr.item,
             quantity: pr.quantity,
             amount: pr.totalValue,

@@ -1,7 +1,10 @@
-import { User, Department } from './user.model';
+import { User  } from './user.model';
+import { Department } from './department.model';
+import { Category } from './category.model';
 
 export interface PurchaseRequest {
-  id: string;
+  _id?: string;  // MongoDB ObjectId
+  id?: string;   // Serialized ID
   createdBy: string;
   item: string;
   quantity: number;
@@ -24,11 +27,11 @@ export enum PRStatus {
   REJECTED = 'rejected'
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  rules?: any;
-}
+// export interface Category {
+//   id: string;
+//   name: string;
+//   rules?: any;
+// }
 
 export interface CreatePRRequest {
   item: string;
@@ -46,4 +49,4 @@ export interface UpdatePRRequest {
 }
 
 // Re-export types from user.model.ts for convenience
-export type { User, Department } from './user.model';
+export type { User  } from './user.model';

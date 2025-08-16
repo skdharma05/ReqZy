@@ -2,13 +2,36 @@
   <div class="page-header">
     <div class="header-content">
       <h1>Category Management</h1>
-      <p class="header-subtitle">Manage purchase request categories and approval rules</p>
+      <p class="header-subtitle">
+        Manage purchase request categories and their approval rules.
+      </p>
     </div>
     <button class="btn btn-primary" (click)="openCreateModal()">
       <i class="fas fa-plus"></i>
       Add Category
     </button>
   </div>
+
+  <!-- Alert Messages -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ errorMessage() }}
+      <button class="alert-close" (click)="clearMessages()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage() }}
+      <button class="alert-close" (click)="clearMessages()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  }
 
   <!-- Summary Stats -->
   <div class="stats-grid">
@@ -18,7 +41,7 @@
       </div>
       <div class="stat-content">
         <div class="stat-value">{{ getActiveCategoriesCount() }}</div>
-        <div class="stat-label">Active Categories</div>
+        <div class="stat-label">Total Categories</div>
       </div>
     </div>
 
@@ -27,18 +50,18 @@
         <i class="fas fa-file-alt"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-value">{{ getTotalRequests() }}</div>
-        <div class="stat-label">Total Requests</div>
+        <div class="stat-value">{{ categories().length }}</div>
+        <div class="stat-label">Categories Available</div>
       </div>
     </div>
 
     <div class="stat-card">
       <div class="stat-icon info">
-        <i class="fas fa-dollar-sign"></i>
+        <i class="fas fa-gavel"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-value">{{ formatCurrency(getTotalBudgetLimit()) }}</div>
-        <div class="stat-label">Total Budget Limits</div>
+        <div class="stat-value">{{ getActiveCategoriesCount() }}</div>
+        <div class="stat-label">Active Categories</div>
       </div>
     </div>
   </div>
@@ -75,39 +98,23 @@
   } @else {
     <!-- Categories Grid -->
     <div class="categories-grid">
-      @for (category of filteredCategories(); track category.id) {
-        <div class="category-card" [class.inactive]="!category.isActive">
+      @for (category of filteredCategories(); track category._id || category.id) {
+        <div class="category-card">
           <div class="category-header">
             <div class="category-info">
               <h3>{{ category.name }}</h3>
               <div class="category-status">
-                <span class="status-badge" [class.active]="category.isActive" [class.inactive]="!category.isActive">
-                  {{ category.isActive ? 'Active' : 'Inactive' }}
+                <span class="status-badge active">
+                  Active
                 </span>
-              </div>
-            </div>
-            <div class="category-stats">
-              <div class="stat-item">
-                <span class="stat-number">{{ category.requestCount }}</span>
-                <span class="stat-label">Requests</span>
               </div>
             </div>
           </div>
 
           <div class="category-content">
-            <p class="category-description">{{ category.description }}</p>
-
             <div class="approval-rules">
               <h4><i class="fas fa-gavel"></i> Approval Rules</h4>
-              <p>{{ category.approvalRules }}</p>
-            </div>
-
-            <div class="budget-info">
-              <div class="budget-item">
-                <i class="fas fa-dollar-sign"></i>
-                <span class="budget-label">Budget Limit</span>
-                <span class="budget-amount">{{ formatCurrency(category.budgetLimit) }}</span>
-              </div>
+              <p>{{ category.rules || 'No rules defined' }}</p>
             </div>
 
             <div class="category-meta">
@@ -119,12 +126,6 @@
             <button class="btn btn-outline-primary btn-sm" (click)="openEditModal(category)">
               <i class="fas fa-edit"></i>
               Edit
-            </button>
-            <button 
-              class="btn btn-outline-secondary btn-sm" 
-              (click)="toggleCategoryStatus(category)">
-              <i class="fas" [class.fa-eye]="!category.isActive" [class.fa-eye-slash]="category.isActive"></i>
-              {{ category.isActive ? 'Deactivate' : 'Activate' }}
             </button>
             <button class="btn btn-outline-danger btn-sm" (click)="deleteCategory(category)">
               <i class="fas fa-trash"></i>
@@ -163,60 +164,13 @@
             </div>
 
             <div class="form-group">
-              <label for="description">Description *</label>
+              <label for="rules">Approval Rules</label>
               <textarea 
-                id="description"
-                formControlName="description"
+                id="rules"
+                formControlName="rules"
                 class="form-control"
                 rows="3"
-                placeholder="Describe what this category covers"></textarea>
-              @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
-                <div class="form-error">Description is required (minimum 10 characters)</div>
-              }
-            </div>
-
-            <div class="form-group">
-              <label for="approvalRules">Approval Rules *</label>
-              <textarea 
-                id="approvalRules"
-                formControlName="approvalRules"
-                class="form-control"
-                rows="2"
                 placeholder="Define approval workflow rules for this category"></textarea>
-              @if (categoryForm.get('approvalRules')?.invalid && categoryForm.get('approvalRules')?.touched) {
-                <div class="form-error">Approval rules are required</div>
-              }
-            </div>
-
-            <div class="form-group">
-              <label for="budgetLimit">Budget Limit *</label>
-              <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input 
-                  type="number" 
-                  id="budgetLimit"
-                  formControlName="budgetLimit"
-                  class="form-control"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01">
-              </div>
-              @if (categoryForm.get('budgetLimit')?.invalid && categoryForm.get('budgetLimit')?.touched) {
-                <div class="form-error">Budget limit must be a positive number</div>
-              }
-            </div>
-
-            <div class="form-group">
-              <div class="form-check">
-                <input 
-                  type="checkbox" 
-                  id="isActive"
-                  formControlName="isActive"
-                  class="form-check-input">
-                <label for="isActive" class="form-check-label">
-                  Active Category
-                </label>
-              </div>
             </div>
           </div>
 
@@ -259,60 +213,13 @@
             </div>
 
             <div class="form-group">
-              <label for="editDescription">Description *</label>
+              <label for="editRules">Approval Rules</label>
               <textarea 
-                id="editDescription"
-                formControlName="description"
+                id="editRules"
+                formControlName="rules"
                 class="form-control"
                 rows="3"
-                placeholder="Describe what this category covers"></textarea>
-              @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
-                <div class="form-error">Description is required (minimum 10 characters)</div>
-              }
-            </div>
-
-            <div class="form-group">
-              <label for="editApprovalRules">Approval Rules *</label>
-              <textarea 
-                id="editApprovalRules"
-                formControlName="approvalRules"
-                class="form-control"
-                rows="2"
                 placeholder="Define approval workflow rules for this category"></textarea>
-              @if (categoryForm.get('approvalRules')?.invalid && categoryForm.get('approvalRules')?.touched) {
-                <div class="form-error">Approval rules are required</div>
-              }
-            </div>
-
-            <div class="form-group">
-              <label for="editBudgetLimit">Budget Limit *</label>
-              <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input 
-                  type="number" 
-                  id="editBudgetLimit"
-                  formControlName="budgetLimit"
-                  class="form-control"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01">
-              </div>
-              @if (categoryForm.get('budgetLimit')?.invalid && categoryForm.get('budgetLimit')?.touched) {
-                <div class="form-error">Budget limit must be a positive number</div>
-              }
-            </div>
-
-            <div class="form-group">
-              <div class="form-check">
-                <input 
-                  type="checkbox" 
-                  id="editIsActive"
-                  formControlName="isActive"
-                  class="form-check-input">
-                <label for="editIsActive" class="form-check-label">
-                  Active Category
-                </label>
-              </div>
             </div>
           </div>
 

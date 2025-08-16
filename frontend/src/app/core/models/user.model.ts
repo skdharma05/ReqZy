@@ -1,3 +1,4 @@
+import type {  Department } from "./department.model";
 export interface User {
   id: string;
   email: string;
@@ -14,17 +15,17 @@ export interface Role {
   permissions: string[];
 }
 
-export interface Department {
-  id: string;
-  _id?: string;
-  name: string;
-  description?: string;
-  manager?: string;
-  budget?: number;
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// export interface Department {
+//   id: string;
+//   _id?: string;
+//   name: string;
+//   description?: string;
+//   manager?: string;
+//   budget?: number;
+//   isActive?: boolean;
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
 
 export interface AuthResponse {
   token: string;

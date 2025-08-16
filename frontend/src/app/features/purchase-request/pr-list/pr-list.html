@@ -125,8 +125,8 @@
               class="filter-select"
             >
               <option value="all">All Departments</option>
-              @for (dept of departments(); track dept.id) {
-                <option [value]="dept.id">{{ dept.name }}</option>
+              @for (dept of departments(); track dept._id || dept.id) {
+                <option [value]="dept._id || dept.id">{{ dept.name }}</option>
               }
             </select>
           </div>
@@ -139,8 +139,8 @@
               class="filter-select"
             >
               <option value="all">All Categories</option>
-              @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id">{{ cat.name }}</option>
+              @for (cat of categories(); track cat._id || cat.id) {
+                <option [value]="cat._id || cat.id">{{ cat.name }}</option>
               }
             </select>
           </div>
@@ -265,7 +265,7 @@
         </div>
       } @else {
         <div class="pr-grid">
-          @for (pr of filteredPrs(); track pr.id) {
+          @for (pr of filteredPrs(); track pr._id || pr.id) {
             <div 
               class="pr-card"
               (click)="navigateToDetail(pr)"

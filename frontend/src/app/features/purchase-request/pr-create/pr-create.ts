@@ -48,13 +48,19 @@ export class PrCreateComponent implements OnInit {
   private loadFormData(): void {
     // Load categories
     this.categoryService.getAll().subscribe({
-      next: categories => this.categories.set(categories),
+      next: categories => {
+        console.log('Loaded categories:', categories);
+        this.categories.set(categories);
+      },
       error: error => this.errorMessage.set('Failed to load categories')
     });
 
     // Load departments
     this.departmentService.getAll().subscribe({
-      next: departments => this.departments.set(departments),
+      next: departments => {
+        console.log('Loaded departments:', departments);
+        this.departments.set(departments);
+      },
       error: error => this.errorMessage.set('Failed to load departments')
     });
   }
@@ -84,6 +90,8 @@ export class PrCreateComponent implements OnInit {
       this.errorMessage.set('');
 
       const formValue = this.prForm.value;
+      console.log('Form values:', formValue);
+
       const prData: CreatePRRequest = {
         item: formValue.item,
         quantity: formValue.quantity,
@@ -92,23 +100,35 @@ export class PrCreateComponent implements OnInit {
         departmentId: formValue.departmentId || this.currentUser()?.departmentId || ''
       };
 
+      console.log('PR data being sent:', prData);
+      console.log('Current user:', this.currentUser());
+      console.log('Auth token exists:', !!localStorage.getItem('token'));
+
       this.prService.create(prData).subscribe({
         next: (createdPr) => {
           this.isSubmitting.set(false);
-          // Navigate to the created PR detail page
-          this.router.navigate(['/purchase-requests', createdPr.id]);
+          console.log('Created PR response:', createdPr);
+          // Navigate to the created PR detail page - handle both _id and id
+          const prId = createdPr._id || createdPr.id;
+          if (prId) {
+            console.log('Navigating to PR:', prId);
+            this.router.navigate(['/purchase-requests', prId]);
+          } else {
+            console.error('No ID found in created PR response:', createdPr);
+            this.router.navigate(['/purchase-requests']);
+          }
         },
         error: (error) => {
           this.isSubmitting.set(false);
-          this.errorMessage.set(error.message || 'Failed to create purchase request');
+          console.error('Error creating PR:', error);
+          this.errorMessage.set(error.error?.error || error.message || 'Failed to create purchase request');
         }
       });
     } else {
+      console.log('Form is invalid:', this.prForm.errors);
       this.markFormGroupTouched();
     }
-  }
-
-  onSaveAsDraft(): void {
+  }  onSaveAsDraft(): void {
     // Similar to submit but with draft status
     if (this.prForm.get('item')?.valid && this.prForm.get('categoryId')?.valid) {
       this.isSubmitting.set(true);
